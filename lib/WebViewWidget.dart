@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:stream4u/WebViewPage.dart';
-import 'package:stream4u/WebViewForWeb.dart';
 import 'package:stream4u/WebViewForWeb2.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
