@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:stream4u/WebViewPage.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:stream4u/WebViewWidget.dart';
 
 class LoginForm extends StatefulWidget {
   const LoginForm({Key? key}) : super(key: key);
@@ -86,7 +87,8 @@ class _LoginFormState extends State<LoginForm> {
 
         } else{
           // Redirecione para a tela principal se estiver válido.
-          Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => WebViewPage()));
+         // Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => WebViewPage()));
+          Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => WebViewWidget()));
         }
 
 
@@ -94,7 +96,7 @@ class _LoginFormState extends State<LoginForm> {
       }
     } on FirebaseAuthException catch (e) {
       print(e);
-      if (e.code == 'INVALID_LOGIN_CREDENTIALS') {
+      if (e.code == 'INVALID_LOGIN_CREDENTIALS' || e.code == 'invalid-login-credentials') {
         // Trate o erro (usuário não encontrado, senha errada, etc.)
         // Exiba uma mensagem de erro para o usuário.
         showDialog(

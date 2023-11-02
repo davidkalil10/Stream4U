@@ -272,6 +272,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.5"
+  pointer_interceptor:
+    dependency: "direct main"
+    description:
+      name: pointer_interceptor
+      sha256: "7626e034489820fd599380d2bb4d3f4a0a5e3529370b62bfce53ab736b91adb2"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.9.3+6"
   rive:
     dependency: "direct main"
     description:
@@ -381,6 +389,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.6.0"
+  webview_flutter_web:
+    dependency: "direct main"
+    description:
+      name: webview_flutter_web
+      sha256: b6334cb5b44a5cc9ddec38ce132c7b9a3054d921768a13f95b8cd798ee5f17b4
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.2.2+3"
   webview_flutter_wkwebview:
     dependency: transitive
     description:
@@ -398,5 +414,5 @@ packages:
     source: hosted
     version: "6.3.0"
 sdks:
-  dart: ">=3.1.0-185.0.dev <4.0.0"
-  flutter: ">=3.7.0"
+  dart: ">=3.1.0 <4.0.0"
+  flutter: ">=3.13.0"
