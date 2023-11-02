@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1069059115965",
+    "project_id": "stream4u-5658b",
+    "storage_bucket": "stream4u-5658b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1069059115965:android:c7997352c046d85d3760d4",
+        "android_client_info": {
+          "package_name": "com.xXFalcoonXx.com.stream4u"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBNSNW0A_1Eqn4v7HTczQjXn0Rcld56V_M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
