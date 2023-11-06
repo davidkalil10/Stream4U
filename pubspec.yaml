@@ -43,6 +43,8 @@ dependencies:
   rive: ^0.9.1
   flutter_svg: ^1.1.6
   webview_flutter_web: ^0.2.2+3
+  http: ^0.13.6
+  cached_network_image: ^3.3.0
 
 
 
