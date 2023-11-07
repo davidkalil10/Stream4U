@@ -45,7 +45,7 @@ import 'package:stream4u/components/star_calculator.dart';class MovieCard extend
                 ),
               ),
               height: 250,
-              width: 150,
+              width: 200,
               decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
                   color: Colors.black
