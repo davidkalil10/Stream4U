@@ -75,44 +75,25 @@ import 'package:stream4u/components/star_calculator.dart';class MovieCard extend
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Expanded(
-                              child: Wrap(
-                                children: [
-                                  Text(title,
-                                    style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                        shadows: [
-                                          BoxShadow(
-                                            color: Color(0xFF101010),
-                                            spreadRadius: 5,
-                                            blurRadius: 30,
-                                            offset: Offset(0, 3),
-                                          ),
-                                        ],
-                                        color: Colors.white
-                                    ),
+                              child: Center(
+                                child: Text(title + " ("+year+")",
+                                  style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      shadows: [
+                                        BoxShadow(
+                                          color: Color(0xFF101010),
+                                          spreadRadius: 5,
+                                          blurRadius: 30,
+                                          offset: Offset(0, 3),
+                                        ),
+                                      ],
+                                      color: Colors.white
                                   ),
-                                  Text( (year == "")
-                                      ? ""
-                                      : " ("+year+")",
-                                    style: TextStyle(
-                                        fontSize: 12,
-                                        shadows: [
-                                          BoxShadow(
-                                            color: Color(0xFF101010),
-                                            spreadRadius: 5,
-                                            blurRadius: 30,
-                                            offset: Offset(0, 3),
-                                          ),
-                                        ],
-                                        color: Colors.white
-                                    ),
-                                  ),
-                                ],
-                                alignment: WrapAlignment.center,
+                                ),
                               ),
                             )
                           ],
@@ -130,7 +111,7 @@ import 'package:stream4u/components/star_calculator.dart';class MovieCard extend
                           subTitle,
                           style: TextStyle(
                             color: Color(0xFF8E8E8E),
-                            fontSize: 9,
+                            fontSize: 8,
                           ),
                           overflow: TextOverflow.ellipsis,
                           maxLines: 3,

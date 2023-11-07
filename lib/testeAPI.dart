@@ -22,6 +22,7 @@ class _testeAPIState extends State<testeAPI> {
   List<Map<String, dynamic>> _seriesCategories = [];
   List<Map<String, dynamic>> _animationCategories = [];
   List<dynamic> _contentList = [];
+  List<dynamic> _contentListFiltered = [];
   bool isVisible = true;
   bool isSubtitleOn = false;
   bool _allowContent = false;
@@ -83,6 +84,7 @@ class _testeAPIState extends State<testeAPI> {
 
       setState(() {
         _contentList = contentList;
+        _contentListFiltered = contentList;
       });
 
       // Imprime o JSON combinado
@@ -370,6 +372,7 @@ class _testeAPIState extends State<testeAPI> {
 
       setState(() {
         _contentList = contentList;
+        _contentListFiltered = _contentList;
         _listaFilmes = listaFilmes;
       });
 
@@ -380,6 +383,47 @@ class _testeAPIState extends State<testeAPI> {
       // Se a solicitação não for bem-sucedida, lide com o erro
       print('Erro ao acessar a API: ${response.statusCode}');
     }
+
+  }
+
+  void consultaPorCategoriaBaseLocal(String idConteudo) async{
+
+    // Faça algo com os dados aqui
+
+    List<dynamic> allContent = _contentList;
+
+    //Obtem o total de conteúdos disponiveis
+    int dataCount = _contentList.length;
+    print('Total de conteudo disponível na base grandona: $dataCount');
+
+    // Itera sobre todas os dados para obter o conteúdo filtrado
+    List<dynamic> filteredContent = allContent.where((item) {
+      return item['type_id'].toString() == idConteudo;
+    }).toList();
+
+    print("Total de conteudos" + filteredContent.length.toString());
+
+    // Iterando pelos elementos da lista e imprimindo
+    List<Movie> listaFilmes =[];
+    for (var content in filteredContent) {
+      //    print(content);
+
+      //Preencher o Filme com o resultado da busca
+      listaFilmes.add(Movie.fromJson(content)) ;
+
+    }
+
+    print("TermineiCaraio todos os filmes da categoria:" +filteredContent.length.toString());
+    print("TermineiCaraio lista de filmes feita:" +listaFilmes.length.toString());
+
+    setState(() {
+      _contentListFiltered = filteredContent;
+      _listaFilmes = listaFilmes;
+    });
+
+
+    //---------------------------------------------------------------------------
+
 
   }
 
@@ -415,10 +459,10 @@ class _testeAPIState extends State<testeAPI> {
     super.initState();
     _setLandscapeOrientation();
 
-   // fetchAPI();
-    // consultaUnitariaAPI("7134");
     consultaCategoriasAPI();
-    consultaPorCategoriaAPI("14");
+    consultaPorCategoriaAPI("12");
+  //  fetchAPI();
+    // consultaUnitariaAPI("7134");
    // checkContentAvailability();
 
   }
@@ -556,6 +600,10 @@ class _testeAPIState extends State<testeAPI> {
                                   // Aqui você tem o type_id da categoria clicada
                                   print("Categoria clicada: ${category['type_name']}, ID: ${category['type_id']}");
                                   // Você pode fazer o que quiser com o type_id aqui
+                                  setState(() {
+                                   // consultaPorCategoriaAPI(category['type_id'].toString());
+                                    consultaPorCategoriaBaseLocal(category['type_id'].toString());
+                                  });
                                 },
                               );
                             },
@@ -581,6 +629,7 @@ class _testeAPIState extends State<testeAPI> {
                        year: filme.year,
                        rating: double.parse(filme.rating),
                        subtitleOn: isSubtitleOn,
+                       starSize: 12,
                      );
                    }).toList(),
                  ),
