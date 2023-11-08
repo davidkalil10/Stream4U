@@ -45,6 +45,8 @@ dependencies:
   webview_flutter_web: ^0.2.2+3
   http: ^0.13.6
   cached_network_image: ^3.3.0
+  intl: ^0.18.1
+  shared_preferences: ^2.2.2
 
 
 
