@@ -7,6 +7,7 @@ import 'package:stream4u/constants.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:stream4u/models/movie.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -22,11 +23,14 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Map<String, dynamic>> _movieCategories = [];
   List<Map<String, dynamic>> _seriesCategories = [];
   List<Map<String, dynamic>> _animationCategories = [];
+  late List<Movie> _listaFilmes;
 
 
   void _fetchAPI() async {
 
-    var apiUrl = "https://api.cinelisoapi.com/api.php/provide/vod/"; //tudo
+   // var apiUrl = "https://api.cinelisoapi.com/api.php/provide/vod/"; //tudo
+    var apiBASE = "https://api.cinelisoapi.com/api.php/provide/vod/"; //tudo
+    var apiUrl = apiBASE + "?ac=videolist"; //tudo
     var response = await http.get(Uri.parse(apiUrl));
 
     if (response.statusCode == 200) {
@@ -44,8 +48,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
       List<dynamic> allContent = [];
       // Itera sobre todas as páginas para obter o conteúdo
-      for (int page = 1; page <= pageCount; page++) {
-        final pageUrl = apiUrl + '?pg=$page';
+    //  for (int page = 1; page <= pageCount; page++) {
+      for (int page = 1; page <= 5; page++) {
+      //  final pageUrl = apiUrl + '?pg=$page';
+        final pageUrl = apiUrl + '&pg=$page';
         final pageResponse = await http.get(Uri.parse(pageUrl));
         final Map<String, dynamic> pageData = json.decode(pageResponse.body);
         final List<dynamic> content = pageData['list'];
@@ -68,57 +74,91 @@ class _HomeScreenState extends State<HomeScreen> {
 
       print("Busca Completa Realizada!");
 
+
+      //Iterar para preencher a lista Filmes
+    //   List<Movie> listaFilmes;
+    //
+    //   listaFilmes = converterParaListaFilmes(contentList);
+    //
+    //   print(contentList.first.toString());
+    //
+    //   print("Filmes convertidos");
+    //  // print(listaFilmes.toString());
+    //  // print(listaFilmes.first.movietoString());
+    //
+    // setState(() {
+    // _listaFilmes = listaFilmes;
+    // });
+
+
    //   consultaCategoriasAPI();
 
 
       //++++++++++++++++++++++++++++++++++++++++++++
 
-      // Recuperar categorias
+      apiUrl = apiBASE ; //tudo
+     var response2 = await http.get(Uri.parse(apiUrl));
 
-      List<Map<String, dynamic>> movieCategories = [];
-      List<Map<String, dynamic>> seriesCategories = [];
-      List<Map<String, dynamic>> animationCategories = [];
+      if (response2.statusCode == 200) {
+        // Se a solicitação for bem-sucedida, analise os dados JSON
+        var data = response2.body;
+        // Faça algo com os dados aqui
+        // print(data);
+        Map<String, dynamic> dataMap = json.decode(data);
 
-      List<dynamic> categories = dataMap['class'];
-      for (var category in categories) {
-        if (category['type_pid'] == 1) {
-          movieCategories.add(category);
-        } else if (category['type_pid'] == 2) {
-          seriesCategories.add(category);
-        } else if (category['type_pid'] == 3) {
-          animationCategories.add(category);
+
+        // Recuperar categorias
+
+        List<Map<String, dynamic>> movieCategories = [];
+        List<Map<String, dynamic>> seriesCategories = [];
+        List<Map<String, dynamic>> animationCategories = [];
+
+        List<dynamic> categories = dataMap['class'];
+        for (var category in categories) {
+          if (category['type_pid'] == 1) {
+            movieCategories.add(category);
+          } else if (category['type_pid'] == 2) {
+            seriesCategories.add(category);
+          } else if (category['type_pid'] == 3) {
+            animationCategories.add(category);
+          }
         }
+
+        print('Categorias de Filmes:');
+        print(movieCategories);
+
+        print('Categorias de Séries:');
+        print(seriesCategories);
+
+        print('Categorias de Animação:');
+        print(animationCategories);
+
+
+        // Inicia com todas as categorias visíveis
+        movieCategories = movieCategories
+          ..sort((a, b) => a['type_name'].compareTo(b['type_name']));
+        seriesCategories = seriesCategories
+          ..sort((a, b) => a['type_name'].compareTo(b['type_name']));
+        animationCategories = animationCategories
+          ..sort((a, b) => a['type_name'].compareTo(b['type_name']));
+
+        // Adiciona a categoria especial no início
+        _addTodosOsConteudos(movieCategories);
+        _addTodosOsConteudos(seriesCategories);
+        _addTodosOsConteudos(animationCategories);
+
+        setState(() {
+          _movieCategories = movieCategories;
+          _seriesCategories = seriesCategories;
+          _animationCategories = animationCategories;
+        });
+
+        print("Categorias recuperadas!");
       }
-
-      print('Categorias de Filmes:');
-      print(movieCategories);
-
-      print('Categorias de Séries:');
-      print(seriesCategories);
-
-      print('Categorias de Animação:');
-      print(animationCategories);
-
-
-      // Inicia com todas as categorias visíveis
-      movieCategories = movieCategories..sort((a, b) => a['type_name'].compareTo(b['type_name']));
-      seriesCategories = seriesCategories..sort((a, b) => a['type_name'].compareTo(b['type_name']));
-      animationCategories = animationCategories..sort((a, b) => a['type_name'].compareTo(b['type_name']));
-
-      // Adiciona a categoria especial no início
-      _addTodosOsConteudos(movieCategories);
-      _addTodosOsConteudos(seriesCategories);
-      _addTodosOsConteudos(animationCategories);
-
-      setState(() {
-        _movieCategories = movieCategories;
-        _seriesCategories = seriesCategories;
-        _animationCategories = animationCategories;
-      });
-
-      print("Categorias recuperadas!");
-
-
+      else {
+        // Se a solicitação não for bem-sucedida, lide com o erro
+        print('Erro ao acessar a API: ${response2.statusCode}');
+      }
 
       //++++++++++++++++++++++++++++++++++++++++++++
 
@@ -126,6 +166,8 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         _contentList = contentList;
       });
+
+      print("content list: " +_contentList.toString());
 
       DateTime now = DateTime.now();
       String formattedDate = DateFormat('dd/MM/yyyy HH:mm').format(now);
@@ -300,6 +342,31 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  List<Movie> converterParaListaFilmes(List<dynamic> contentList, List<Map<String, dynamic>> categories){
+
+    List<Movie> listaConteudos =[];
+
+    //Iterando pelos elementos da lista para filtrar
+
+    for (var category in categories) {
+      // Obtendo o type_id da categoria atual
+      int categoryId = category['type_id'];
+
+      // Filtrando os conteúdos com base no type_id da categoria atual
+      List<dynamic> filteredContent = contentList.where((content) {
+        return content['type_id'] == categoryId;
+      }).toList();
+
+      // Convertendo os conteúdos filtrados em objetos Movie e adicionando à lista final
+      for (var content in filteredContent) {
+        listaConteudos.add(Movie.fromJson(content));
+      }
+
+    }
+
+    return listaConteudos;
+  }
+
   void _waitingAPI() async{
     showDialog(
       context: context,
@@ -384,14 +451,19 @@ class _HomeScreenState extends State<HomeScreen> {
               CustomCard( icon: Icons.movie, lable: "Filmes", coresGradiente: [Colors.redAccent, Colors.orange],callback: (){
 
                 if (_contentList.isNotEmpty && _movieCategories.isNotEmpty) {
-                  print("passei aqui tambem");
+                  print("passei aqui tambem Filmes");
+                  print(_movieCategories.toString());
+                 // print(_contentList.toString());
+                //  print(converterParaListaFilmes(_contentList).toString());
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => VodContent(
                         contentList: _contentList,
                         category: "Filmes",
-                        contentCategories: _movieCategories
+                        contentCategories: _movieCategories,
+                        //listaFilmes: _listaFilmes,
+                        listaFilmes: converterParaListaFilmes(_contentList, _movieCategories),
                       ),
                     ),
                   );
@@ -407,7 +479,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       builder: (context) => VodContent(
                           contentList: _contentList,
                           category: "Séries",
-                          contentCategories: _seriesCategories
+                          contentCategories: _seriesCategories,
+                          listaFilmes: converterParaListaFilmes(_contentList, _seriesCategories),
                       ),
                     ),
                   );
@@ -423,7 +496,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       builder: (context) => VodContent(
                           contentList: _contentList,
                           category: "Animações",
-                          contentCategories: _animationCategories
+                          contentCategories: _animationCategories,
+                          listaFilmes: converterParaListaFilmes(_contentList, _animationCategories),
                       ),
                     ),
                   );
