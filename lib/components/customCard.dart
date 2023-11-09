@@ -6,7 +6,7 @@ class CustomCard extends StatelessWidget {
   final IconData icon;
   final String lable;
   final List<Color> coresGradiente;
-  final void callback;
+  final void Function() callback;
 
 
   CustomCard({
@@ -19,9 +19,7 @@ class CustomCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: (){
-        this.callback;
-      },
+      onTap: callback,
       child: Container(
         height: 100,
         width: 100,

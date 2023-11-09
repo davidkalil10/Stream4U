@@ -19,6 +19,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<dynamic> _contentList = [];
   String _formattedDate = "";
+  List<Map<String, dynamic>> _movieCategories = [];
+  List<Map<String, dynamic>> _seriesCategories = [];
+  List<Map<String, dynamic>> _animationCategories = [];
 
 
   void _fetchAPI() async {
@@ -65,6 +68,61 @@ class _HomeScreenState extends State<HomeScreen> {
 
       print("Busca Completa Realizada!");
 
+   //   consultaCategoriasAPI();
+
+
+      //++++++++++++++++++++++++++++++++++++++++++++
+
+      // Recuperar categorias
+
+      List<Map<String, dynamic>> movieCategories = [];
+      List<Map<String, dynamic>> seriesCategories = [];
+      List<Map<String, dynamic>> animationCategories = [];
+
+      List<dynamic> categories = dataMap['class'];
+      for (var category in categories) {
+        if (category['type_pid'] == 1) {
+          movieCategories.add(category);
+        } else if (category['type_pid'] == 2) {
+          seriesCategories.add(category);
+        } else if (category['type_pid'] == 3) {
+          animationCategories.add(category);
+        }
+      }
+
+      print('Categorias de Filmes:');
+      print(movieCategories);
+
+      print('Categorias de Séries:');
+      print(seriesCategories);
+
+      print('Categorias de Animação:');
+      print(animationCategories);
+
+
+      // Inicia com todas as categorias visíveis
+      movieCategories = movieCategories..sort((a, b) => a['type_name'].compareTo(b['type_name']));
+      seriesCategories = seriesCategories..sort((a, b) => a['type_name'].compareTo(b['type_name']));
+      animationCategories = animationCategories..sort((a, b) => a['type_name'].compareTo(b['type_name']));
+
+      // Adiciona a categoria especial no início
+      _addTodosOsConteudos(movieCategories);
+      _addTodosOsConteudos(seriesCategories);
+      _addTodosOsConteudos(animationCategories);
+
+      setState(() {
+        _movieCategories = movieCategories;
+        _seriesCategories = seriesCategories;
+        _animationCategories = animationCategories;
+      });
+
+      print("Categorias recuperadas!");
+
+
+
+      //++++++++++++++++++++++++++++++++++++++++++++
+
+
       setState(() {
         _contentList = contentList;
       });
@@ -76,7 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _formattedDate = formattedDate;
       });
 
-      _saveData(contentList, formattedDate);
+      _saveData(contentList, formattedDate, _movieCategories, _seriesCategories, _animationCategories);
 
       showDialog(
         context: context,
@@ -111,32 +169,138 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _saveData(List<dynamic> contentList, String formattedDate) async {
+  void consultaCategoriasAPI() async{
+
+    var apiUrl = "https://api.cinelisoapi.com/api.php/provide/vod/"; //tudo
+
+    var response = await http.get(Uri.parse(apiUrl));
+
+    if (response.statusCode == 200) {
+      // Se a solicitação for bem-sucedida, analise os dados JSON
+      var data = response.body;
+      // Faça algo com os dados aqui
+
+      Map<String, dynamic> dataMap = json.decode(data);
+
+
+      List<Map<String, dynamic>> movieCategories = [];
+      List<Map<String, dynamic>> seriesCategories = [];
+      List<Map<String, dynamic>> animationCategories = [];
+
+      List<dynamic> categories = dataMap['class'];
+      for (var category in categories) {
+        if (category['type_pid'] == 1) {
+          movieCategories.add(category);
+        } else if (category['type_pid'] == 2) {
+          seriesCategories.add(category);
+        } else if (category['type_pid'] == 3) {
+          animationCategories.add(category);
+        }
+      }
+
+      print('Categorias de Filmes:');
+      print(movieCategories);
+
+      print('Categorias de Séries:');
+      print(seriesCategories);
+
+      print('Categorias de Animação:');
+      print(animationCategories);
+
+
+      // Inicia com todas as categorias visíveis
+      movieCategories = movieCategories..sort((a, b) => a['type_name'].compareTo(b['type_name']));
+      seriesCategories = seriesCategories..sort((a, b) => a['type_name'].compareTo(b['type_name']));
+      animationCategories = animationCategories..sort((a, b) => a['type_name'].compareTo(b['type_name']));
+
+      // Adiciona a categoria especial no início
+      _addTodosOsConteudos(movieCategories);
+      _addTodosOsConteudos(seriesCategories);
+      _addTodosOsConteudos(animationCategories);
+
+      setState(() {
+        _movieCategories = movieCategories;
+        _seriesCategories = seriesCategories;
+        _animationCategories = animationCategories;
+      });
+
+      print("Categorias recuperadas!");
+
+      //---------------------------------------------------------------------------
+
+    } else {
+      // Se a solicitação não for bem-sucedida, lide com o erro
+      print('Erro ao acessar a API: ${response.statusCode}');
+    }
+
+  }
+
+  // Função para adicionar a categoria "Todos os conteúdos"
+  List<Map<String, dynamic>> _addTodosOsConteudos(List<Map<String, dynamic>> categories) {
+    if (!categories.any((category) => category['type_name'] == 'TODOS OS CONTEÚDOS')) {
+      categories.insert(0, {
+        'type_id': -1, // Um ID que não será conflitante com outros IDs reais
+        'type_name': 'Todos os conteúdos'
+      });
+    }
+    return categories;
+  }
+
+  void _saveData(List<dynamic> contentList, String formattedDate, List<Map<String, dynamic>> movieCategories, List<Map<String, dynamic>> seriesCategories, List<Map<String, dynamic>> animationCategories) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String contentListJson = json.encode(contentList);
     prefs.setString('contentList', contentListJson);
     prefs.setString('formattedDate', formattedDate);
+
+    String movieCategoriesJson = json.encode(movieCategories);
+    prefs.setString('movieCategories', movieCategoriesJson);
+
+    String seriesCategoriesJson = json.encode(seriesCategories);
+    prefs.setString('seriesCategories', seriesCategoriesJson);
+
+    String animationCategoriesJson = json.encode(animationCategories);
+    prefs.setString('animationCategories', animationCategoriesJson);
+
   }
+
 
   Future<void> loadData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? contentListJson = prefs.getString('contentList');
     String? storedFormattedDate = prefs.getString('formattedDate');
+    String? movieCategoriesJson = prefs.getString('movieCategories');
+    String? seriesCategoriesJson = prefs.getString('seriesCategories');
+    String? animationCategoriesJson = prefs.getString('animationCategories');
 
-    if (contentListJson != null && storedFormattedDate != null) {
+    if (contentListJson != null &&
+        storedFormattedDate != null &&
+        movieCategoriesJson != null &&
+        seriesCategoriesJson != null &&
+        animationCategoriesJson != null) {
       List<dynamic> contentList = json.decode(contentListJson);
-      print("dados carregados da memoria com sucesso");
+      List<Map<String, dynamic>> movieCategories =
+      List<Map<String, dynamic>>.from(json.decode(movieCategoriesJson));
+      List<Map<String, dynamic>> seriesCategories =
+      List<Map<String, dynamic>>.from(json.decode(seriesCategoriesJson));
+      List<Map<String, dynamic>> animationCategories =
+      List<Map<String, dynamic>>.from(json.decode(animationCategoriesJson));
+
+      print("Dados carregados da memória com sucesso");
+
       setState(() {
         _contentList = contentList;
         _formattedDate = storedFormattedDate;
-      //  _allowContent = true;
+        _movieCategories = movieCategories;
+        _seriesCategories = seriesCategories;
+        _animationCategories = animationCategories;
+       //_allowContent = true;
       });
     } else {
-      print("sem dados na memoria");
+      print("Sem dados na memória");
     }
   }
 
-  void _waintingAPI() async{
+  void _waitingAPI() async{
     showDialog(
       context: context,
       barrierDismissible: false, // Impede o fechamento do diálogo ao tocar fora dele
@@ -196,7 +360,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     IconButton(
                       icon: Icon(Icons.refresh, color: Colors.white,),
                       onPressed: (){
-                        _waintingAPI();
+                        _waitingAPI();
                       },
                     ),
                     IconButton(
@@ -218,20 +382,53 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               CustomCard( icon: Icons.live_tv, lable: "Live TV", coresGradiente: [Colors.green, Colors.blue],callback: (){}),
               CustomCard( icon: Icons.movie, lable: "Filmes", coresGradiente: [Colors.redAccent, Colors.orange],callback: (){
-                if (_contentList.isNotEmpty) {
+
+                if (_contentList.isNotEmpty && _movieCategories.isNotEmpty) {
+                  print("passei aqui tambem");
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => VodContent(
-                        //contentList: _contentList,
-                       // category: "Filmes",
+                        contentList: _contentList,
+                        category: "Filmes",
+                        contentCategories: _movieCategories
                       ),
                     ),
                   );
                 }
               }),
-              CustomCard( icon: Icons.tv, lable: "Séries", coresGradiente: [Colors.deepPurpleAccent, Colors.blue],callback: (){}),
-              CustomCard( icon: Icons.child_care, lable: "Animações", coresGradiente: [Colors.pinkAccent, Colors.red],callback: (){}),
+              CustomCard( icon: Icons.tv, lable: "Séries", coresGradiente: [Colors.deepPurpleAccent, Colors.blue],callback: (){
+
+                if (_contentList.isNotEmpty && _seriesCategories.isNotEmpty) {
+                  print("passei aqui tambem");
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => VodContent(
+                          contentList: _contentList,
+                          category: "Séries",
+                          contentCategories: _seriesCategories
+                      ),
+                    ),
+                  );
+                }
+
+              }),
+              CustomCard( icon: Icons.child_care, lable: "Animações", coresGradiente: [Colors.pinkAccent, Colors.red],callback: (){
+                if (_contentList.isNotEmpty && _animationCategories.isNotEmpty) {
+                  print("passei aqui tambem");
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => VodContent(
+                          contentList: _contentList,
+                          category: "Animações",
+                          contentCategories: _animationCategories
+                      ),
+                    ),
+                  );
+                }
+              }),
             ],
           ),
           Padding(
