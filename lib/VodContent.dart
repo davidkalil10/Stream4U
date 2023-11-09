@@ -23,9 +23,23 @@ class _VodContentState extends State<VodContent> {
   bool isVisible = true;
   bool isSubtitleOn = false;
   TextEditingController searchController = TextEditingController();
+  TextEditingController searchControllerFilmes = TextEditingController();
   List<Map<String, dynamic>> _filteredCategories = [];
   List<dynamic> _contentListFiltered = [];
   late List<Movie> _listaFilmes;
+  late List<Movie> _filteredMovies;
+  late List<Movie> _filteredMoviesBackup;
+  bool _isSearchOpened = false;
+  String _filteredCategoryName="Todos os Conteúdos";
+
+  String getCategoryNameById(int? categoryId, List<Map<String, dynamic>> categories) {
+    for (var category in categories) {
+      if (category['type_id'] == categoryId) {
+        return category['type_name'];
+      }
+    }
+    return 'Categoria não encontrada'; // ou null, dependendo do caso
+  }
 
   void consultaPorCategoriaBaseLocal(String idConteudo) async{
 
@@ -36,7 +50,7 @@ class _VodContentState extends State<VodContent> {
     //Obtem o total de conteúdos disponiveis
     int dataCount = widget.contentList.length;
     print('Total de conteudo disponível na base grandona: $dataCount');
-
+    String nomeCategoria = getCategoryNameById((int.tryParse(idConteudo)),_filteredCategories);
 
 
     if (idConteudo != "-1"){
@@ -64,6 +78,9 @@ class _VodContentState extends State<VodContent> {
       setState(() {
         _contentListFiltered = filteredContent;
         _listaFilmes = listaFilmes;
+        _filteredMovies = _listaFilmes;
+        _filteredMoviesBackup = _listaFilmes;
+        _filteredCategoryName = nomeCategoria;
       });
 
     }else{
@@ -72,6 +89,9 @@ class _VodContentState extends State<VodContent> {
       setState(() {
         _contentListFiltered = widget.contentList;
         _listaFilmes = widget.listaFilmes;
+        _filteredMovies = _listaFilmes;
+        _filteredMoviesBackup = _listaFilmes;
+        _filteredCategoryName = "Todos os Conteúdos";
       });
 
     }
@@ -116,18 +136,39 @@ class _VodContentState extends State<VodContent> {
 
   }
 
+  void filterMovies() {
+    List<Movie> filteredMovies = [];
+    print("to tentando ein");
+
+    if (searchControllerFilmes.text.isEmpty) {
+      filteredMovies = _filteredMovies;
+    } else {
+      filteredMovies = _filteredMovies.where((movie) {
+        return movie.title.toLowerCase().contains(searchControllerFilmes.text.toLowerCase());
+      }).toList();
+    }
+
+    setState(() {
+      _filteredMoviesBackup = filteredMovies;
+    });
+  }
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     _contentListFiltered = widget.contentList;
     _listaFilmes = widget.listaFilmes;
+    _filteredMovies = widget.listaFilmes;
+    _filteredMoviesBackup = widget.listaFilmes;
     _filteredCategories = widget.contentCategories;
     //_listaFilmes = converterParaListaFilmes(widget.contentList);
 
     setState(() {
       _contentListFiltered = widget.contentList;
       _listaFilmes = widget.listaFilmes;
+      _filteredMovies = widget.listaFilmes;
+      _filteredMoviesBackup = widget.listaFilmes;
       _filteredCategories = widget.contentCategories;
       //_listaFilmes = converterParaListaFilmes(widget.contentList);
     });
@@ -145,19 +186,89 @@ class _VodContentState extends State<VodContent> {
       appBar: AppBar(
         shadowColor: shadowColorDark,
         backgroundColor: backgroundColor2,
-        leading: Icon(Icons.arrow_back),
-        title: Text("Stream 4U", style: TextStyle(
-            fontSize: 25, fontFamily: "Poppins", height: 1.2),),
-        actions: [
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context); // Fecha a janela e retorna para a tela anterior
+          },
+        ),
+        // title: Text("Stream 4U", style: TextStyle(
+        //     fontSize: 25, fontFamily: "Poppins", height: 1.2),),
+        title:  _isSearchOpened == false
+            ? Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              "Stream 4U",
+              style: TextStyle(
+                fontSize: 25,
+                fontFamily: "Poppins",
+                height: 1.2,
+              ),
+            ),
+            Text(
+              _filteredCategoryName,
+              style: TextStyle(
+                fontSize: 18,
+                fontFamily: "Poppins",
+                height: 1.2,
+              ),
+            ),
+            SizedBox(width: 1,)
+          ],
+        )
+        :Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              "Stream 4U",
+              style: TextStyle(
+                fontSize: 25,
+                fontFamily: "Poppins",
+                height: 1.2,
+              ),
+            ),
+            SizedBox(width: 1,)
+          ],
+        ),
+        actions:   [
           IconButton(
-              onPressed: (){}, icon: Icon(Icons.search)
+            onPressed: () {
+              setState(() {
+                _isSearchOpened = !_isSearchOpened;
+              });
+            },
+            icon: _isSearchOpened ? Icon(Icons.arrow_back) : Icon(Icons.search),
           ),
+          if (_isSearchOpened)
+            SizedBox(
+              width: 480,
+              child: TextField(
+                controller: searchControllerFilmes,
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              decoration: InputDecoration(
+                  hintText: 'Pesquisar '+widget.category,
+                border: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                hintStyle: TextStyle(color: Colors.white70),
+              fillColor: backgroundColor2,
+              ),
+                autofocus: true, // Esta propriedade moverá o foco para o campo de texto
+                // Implemente a lógica de filtragem com base no texto inserido
+                onChanged: (String value) {
+                  // Lógica de filtragem
+                  filterMovies(); // Chama o filtro quando o texto muda
+                },
+              ),
+            ),
           IconButton(
-              onPressed: (){
-                setState(() {
-                  isVisible = !isVisible;
-                });
-              }, icon: Icon((isVisible? Icons.visibility: Icons.visibility_off))
+            onPressed: () {
+              setState(() {
+                isVisible = !isVisible;
+              });
+            },
+            icon: Icon(isVisible ? Icons.visibility : Icons.visibility_off),
           ),
           PopupMenuButton<String>(
             onSelected: (value) {
@@ -165,7 +276,7 @@ class _VodContentState extends State<VodContent> {
                 if (value == 'toggle_captions') {
                   isSubtitleOn = !isSubtitleOn;
                 }
-                // Aqui você pode adicionar mais opções e suas respectivas ações
+                // Outras ações do menu popup
               });
             },
             itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
@@ -173,7 +284,7 @@ class _VodContentState extends State<VodContent> {
                 value: 'toggle_captions',
                 child: Text(isSubtitleOn ? 'Ocultar Legendas' : 'Exibir Legendas'),
               ),
-              // Adicione mais PopupMenuItem se precisar de mais opções
+              // Outros itens do menu popup
             ],
             icon: Icon(Icons.more_vert),
           ),
@@ -247,7 +358,7 @@ class _VodContentState extends State<VodContent> {
               child: GridView.count(
                 crossAxisCount: isVisible == true? 4 :5, // 4 com a barra, 5 sem a brra
                 children:
-                _listaFilmes.map((Movie filme){
+                _filteredMoviesBackup.map((Movie filme){
                   return MovieCard(
                     urlPic: filme.pictureURL,
                     title: filme.title,
