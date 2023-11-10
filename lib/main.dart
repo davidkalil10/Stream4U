@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:stream4u/HomeScreen.dart';
+import 'package:stream4u/MovieScreen.dart';
 //import 'package:webview_flutter/webview_flutter.dart';
 import 'firebase_options.dart';
 import 'package:stream4u/onboding_screen.dart';
@@ -40,6 +41,7 @@ class MyApp extends StatelessWidget {
       //home: const OnboardingScreen(),
       //home: const testeAPI(),
       home: const HomeScreen(),
+      //home: const MovieScreen(),
     );
   }
 }

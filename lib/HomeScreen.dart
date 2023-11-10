@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:stream4u/VodContent.dart';
 import 'package:stream4u/components/customCard.dart';
 import 'package:stream4u/constants.dart';
@@ -26,7 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
   late List<Movie> _listaFilmes;
 
 
-  void _fetchAPI() async {
+  Future<bool> _fetchAPI() async {
 
    // var apiUrl = "https://api.cinelisoapi.com/api.php/provide/vod/"; //tudo
     var apiBASE = "https://api.cinelisoapi.com/api.php/provide/vod/"; //tudo
@@ -48,7 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       List<dynamic> allContent = [];
       // Itera sobre todas as páginas para obter o conteúdo
-    //  for (int page = 1; page <= pageCount; page++) {
+     // for (int page = 1; page <= pageCount; page++) {
       for (int page = 1; page <= 5; page++) {
       //  final pageUrl = apiUrl + '?pg=$page';
         final pageUrl = apiUrl + '&pg=$page';
@@ -209,6 +210,8 @@ class _HomeScreenState extends State<HomeScreen> {
       // Se a solicitação não for bem-sucedida, lide com o erro
       print('Erro ao acessar a API: ${response.statusCode}');
     }
+
+    return true;
   }
 
   void consultaCategoriasAPI() async{
@@ -376,9 +379,11 @@ class _HomeScreenState extends State<HomeScreen> {
           title: Text('Aguarde...'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text('Atualizando a base de dados.'),
+              Text('Isso pode levar 4 minutos'),
+              SizedBox(height: 10,),
               CircularProgressIndicator(), // Indicador de progresso
             ],
           ),
@@ -387,7 +392,15 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     try {
-      _fetchAPI();
+
+      bool api = await _fetchAPI();
+      try {
+        if (api = true){
+          Navigator.of(context).pop();
+        }
+      } catch (e){
+        return;
+      }
     } catch (e) {
       print('Erro ao acessar a API: $e');
     } finally {
@@ -395,10 +408,30 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  void _setLandscapeOrientation(){
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeRight,
+      DeviceOrientation.landscapeLeft,
+    ]);
+  }
+
+  @override
+  void dispose() {
+    // Quando o State é descartado, volta para as orientações preferidas do sistema
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeRight,
+      DeviceOrientation.landscapeLeft,
+    ]);
+    super.dispose();
+  }
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    _setLandscapeOrientation();
     loadData();
   }
 

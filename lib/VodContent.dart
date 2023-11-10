@@ -1,6 +1,8 @@
 //import 'dart:html';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:stream4u/MovieScreen.dart';
 import 'package:stream4u/components/movie_card.dart';
 import 'package:stream4u/constants.dart';
 import 'package:stream4u/models/movie.dart';
@@ -153,10 +155,32 @@ class _VodContentState extends State<VodContent> {
     });
   }
 
+  void _setLandscapeOrientation(){
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeRight,
+      DeviceOrientation.landscapeLeft,
+    ]);
+  }
+
+  @override
+  void dispose() {
+    // Quando o State é descartado, volta para as orientações preferidas do sistema
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeRight,
+      DeviceOrientation.landscapeLeft,
+    ]);
+    super.dispose();
+    searchController.dispose();
+    searchControllerFilmes.dispose();
+  }
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    _setLandscapeOrientation();
     _contentListFiltered = widget.contentList;
     _listaFilmes = widget.listaFilmes;
     _filteredMovies = widget.listaFilmes;
@@ -351,27 +375,84 @@ class _VodContentState extends State<VodContent> {
               ),
             ),
           ),
+          // Expanded(
+          //   flex: 6,
+          //   child: Container(
+          //     color: shadowColorLight,
+          //     child: GridView.count(
+          //       crossAxisCount: isVisible == true? 4 :5, // 4 com a barra, 5 sem a barra
+          //       children:
+          //       _filteredMoviesBackup.map((Movie filme){
+          //         return MovieCard(
+          //           urlPic: filme.pictureURL,
+          //           title: filme.title,
+          //           subTitle: filme.subtitle,
+          //           year: filme.year,
+          //           rating: double.parse(filme.rating),
+          //           subtitleOn: isSubtitleOn,
+          //           starSize: 12,
+          //         );
+          //       }).toList(),
+          //     ),
+          //   ),
+          // ),
           Expanded(
             flex: 6,
             child: Container(
               color: shadowColorLight,
-              child: GridView.count(
-                crossAxisCount: isVisible == true? 4 :5, // 4 com a barra, 5 sem a brra
-                children:
-                _filteredMoviesBackup.map((Movie filme){
-                  return MovieCard(
-                    urlPic: filme.pictureURL,
-                    title: filme.title,
-                    subTitle: filme.subtitle,
-                    year: filme.year,
-                    rating: double.parse(filme.rating),
-                    subtitleOn: isSubtitleOn,
-                    starSize: 12,
+              child: GridView.builder(
+                itemCount: _filteredMoviesBackup.length,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: isVisible ? 4 : 5, // 4 com a barra, 5 sem a barra
+                  mainAxisSpacing: 8.0,
+                  crossAxisSpacing: 8.0,
+                ),
+                itemBuilder: (context, index) {
+                  var filme = _filteredMoviesBackup[index];
+
+                  return  GestureDetector(
+                    onDoubleTap: (){
+                      print("Duplo no: ${filme.title}");
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => MovieScreen(filme: filme),
+                        ),
+                      );
+                    },
+                    onLongPress: (){
+                      print("Forçada no: ${filme.title}");
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => MovieScreen(filme: filme),
+                        ),
+                      );
+                    },
+                    onTap: () {
+                      // Seu código de navegação aqui
+                      print("Cliquei no: ${filme.title}");
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => MovieScreen(filme: filme),
+                        ),
+                      );
+                    },
+                    child: MovieCard(
+                      urlPic: filme.pictureURL,
+                      title: filme.title,
+                      subTitle: filme.subtitle,
+                      year: filme.year,
+                      rating: double.parse(filme.rating),
+                      subtitleOn: isSubtitleOn,
+                      starSize: 12,
+                    ),
                   );
-                }).toList(),
+                },
               ),
             ),
-          )
+          ),
         ],
       ),
     );
