@@ -49,8 +49,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
       List<dynamic> allContent = [];
       // Itera sobre todas as páginas para obter o conteúdo
-     // for (int page = 1; page <= pageCount; page++) {
-      for (int page = 1; page <= 5; page++) {
+      for (int page = 1; page <= pageCount; page++) {
+     // for (int page = 1; page <= 5; page++) {
       //  final pageUrl = apiUrl + '?pg=$page';
         final pageUrl = apiUrl + '&pg=$page';
         final pageResponse = await http.get(Uri.parse(pageUrl));
@@ -179,31 +179,31 @@ class _HomeScreenState extends State<HomeScreen> {
 
       _saveData(contentList, formattedDate, _movieCategories, _seriesCategories, _animationCategories);
 
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text('Sucesso!'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Os dados foram atualizados com sucesso.'),
-                SizedBox(height: 8,),
-                Text('Última atualização: $formattedDate'),
-              ],
-            ),
-            actions: <Widget>[
-              TextButton(
-                child: Text('OK'),
-                onPressed: () {
-                  Navigator.of(context).pop(); // Fecha o AlertDialog
-                },
-              ),
-            ],
-          );
-        },
-      );
+      // showDialog(
+      //   context: context,
+      //   builder: (BuildContext context) {
+      //     return AlertDialog(
+      //       title: Text('Sucesso!'),
+      //       content: Column(
+      //         mainAxisSize: MainAxisSize.min,
+      //         crossAxisAlignment: CrossAxisAlignment.start,
+      //         children: [
+      //           Text('Os dados foram atualizados com sucesso.'),
+      //           SizedBox(height: 8,),
+      //           Text('Última atualização: $formattedDate'),
+      //         ],
+      //       ),
+      //       actions: <Widget>[
+      //         TextButton(
+      //           child: Text('OK'),
+      //           onPressed: () {
+      //             Navigator.of(context).pop(); // Fecha o AlertDialog
+      //           },
+      //         ),
+      //       ],
+      //     );
+      //   },
+      // );
 
 
     } else {
@@ -370,6 +370,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return listaConteudos;
   }
 
+
   void _waitingAPI() async{
     showDialog(
       context: context,
@@ -396,7 +397,9 @@ class _HomeScreenState extends State<HomeScreen> {
       bool api = await _fetchAPI();
       try {
         if (api = true){
-          Navigator.of(context).pop();
+           Navigator.of(context).pop();
+
+
         }
       } catch (e){
         return;
@@ -404,7 +407,31 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (e) {
       print('Erro ao acessar a API: $e');
     } finally {
-      Navigator.of(context).pop(); // Fecha o AlertDialog após a conclusão do processamento
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Sucesso!'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Os dados foram atualizados com sucesso.'),
+                SizedBox(height: 8,),
+                Text('Última atualização: $_formattedDate'),
+              ],
+            ),
+            actions: <Widget>[
+              TextButton(
+                child: Text('OK'),
+                onPressed: () {
+                  Navigator.of(context).pop(); // Fecha o AlertDialog
+                },
+              ),
+            ],
+          );
+        },
+      );
     }
   }
 

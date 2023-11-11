@@ -1,6 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:rive/rive.dart';
+import 'package:stream4u/PlayMovie.dart';
 import 'package:stream4u/components/play_btn.dart';
 import 'package:stream4u/components/star_calculator.dart';
 import 'package:stream4u/constants.dart';
@@ -18,13 +20,94 @@ class MovieScreen extends StatefulWidget {
 
 class _MovieScreenState extends State<MovieScreen> {
   late RiveAnimationController _btnAnimationController;
+  late List<Map<String, dynamic>> _listaDeEpisodios;
+  String _temporadaSelecionada = 'S01'; // Temporada padrão
+  int intTemporadaSelecionada = 1;
+  int _qntTemporadas =0;
+  List<Map<String, dynamic>> _episodiosTemporadaSelecionada = [];
+
+  List<Map<String, dynamic>> extractUrls(String input) {
+    List<Map<String, dynamic>> contents = [];
+    List<String> tokens = input.split('#');
+  //  print("teste");
+   // print(tokens);
+    String currentSeason = '';
+    String currentEpisode = '';
+
+    for (String token in tokens) {
+      List<String> parts = token.split('\$');
+
+      if (parts.length > 1) {
+        String typeAndInfo = parts[0].trim();
+        String data = parts[1].trim();
+
+        String temporada = '';
+        String episodio = '';
+
+        RegExpMatch? match = RegExp(r'(S\d+)( E\d+)?').firstMatch(typeAndInfo);
+        if (match != null) {
+          temporada = match.group(1) ?? '';
+          episodio = match.group(2) ?? '';
+        }
+
+        if (typeAndInfo.startsWith('S')) {
+          // Série
+          contents.add({'type': 'Série', 'season': temporada, 'episode': episodio, 'url': data});
+        } else if (typeAndInfo.startsWith('E')) {
+          // Episódio de Série
+          contents.add({'type': 'Série', 'season': temporada, 'episode': episodio, 'url': data});
+        } else if (typeAndInfo == 'HD') {
+          // Filme
+          contents.add({'type': 'Filme', 'season': 'Filme', 'episode': 'Filme', 'url': data});
+        }
+      }
+    }
+
+    return contents;
+  }
+
+  int _obterQntTemporadas(List<Map<String, dynamic>> listaDeEpisodios){
+    Set<String> temporadasDisponiveis = Set<String>();
+    for (Map<String, dynamic> episodio in listaDeEpisodios) {
+      temporadasDisponiveis.add(episodio['season'].toString());
+    }
+    int quantidadeTemporadas = temporadasDisponiveis.length;
+    return quantidadeTemporadas;
+  }
+
+  void _setLandscapeOrientation(){
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeRight,
+      DeviceOrientation.landscapeLeft,
+    ]);
+  }
+
+  @override
+  void dispose() {
+    // Quando o State é descartado, volta para as orientações preferidas do sistema
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeRight,
+      DeviceOrientation.landscapeLeft,
+    ]);
+    super.dispose();
+    _btnAnimationController.dispose();
+  }
 
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    _setLandscapeOrientation();
     _btnAnimationController = OneShotAnimation("active", autoplay: false);
+    _listaDeEpisodios = extractUrls(widget.filme.url);
+    _qntTemporadas = _obterQntTemporadas (_listaDeEpisodios);
+    print("vamos ver: " +_qntTemporadas.toString());
+    print("aqui oh");
+    print(_listaDeEpisodios);
+
   }
 
 
@@ -217,10 +300,46 @@ class _MovieScreenState extends State<MovieScreen> {
                                         press: () {
                                           _btnAnimationController.isActive = true;
                                           Future.delayed(Duration(milliseconds: 800), () {
-
-                                          });
+                                          }
+                                          );
+                                          print("botao clicado");
+                                          // Navigator.push(
+                                          //   context,
+                                          //   MaterialPageRoute(
+                                          //     builder: (context) => PlayMovie(url: extrairURL(widget.filme.url),),
+                                          //   ),
+                                          // );
                                         },
                                       ),
+                                      DropdownButton(
+                                        value: intTemporadaSelecionada,
+                                        items: List.generate(
+                                          // Substitua o número 3 pelo número total de temporadas disponíveis
+                                          _qntTemporadas,
+                                              (index) => DropdownMenuItem(
+                                            value: index + 1, // Adiciona 1 para começar de 1 em vez de 0
+                                            child: Text('Temporada S${index + 1}'),
+                                          ),
+                                        ),
+                                        onChanged: (value) {
+                                         // Navigator.pop(context); // Fecha o menu
+                                          List<Map<String, dynamic>> episodiosTemporadaSelecionada = [];
+                                          String temporadaSelecionada = value!<10?"S0"+value.toString():"S"+value.toString();
+
+                                          for (Map<String, dynamic> episodio in _listaDeEpisodios) {
+                                            if (episodio['season'] == temporadaSelecionada.toString()) {
+                                              episodiosTemporadaSelecionada.add(episodio);
+                                              print(episodio);
+                                            }
+                                          }
+                                          setState(() {
+                                            _temporadaSelecionada = temporadaSelecionada;
+                                            print(_temporadaSelecionada);
+                                            intTemporadaSelecionada = value!;
+                                            _episodiosTemporadaSelecionada = episodiosTemporadaSelecionada;
+                                          });
+                                        },
+                                      )
                                     //  SizedBox(width: 500,),
                                     ],
                                   )
@@ -236,6 +355,28 @@ class _MovieScreenState extends State<MovieScreen> {
                             widget.filme.subtitle,
                             style: TextStyle(color: Colors.white, fontSize: 16),
                             textAlign: TextAlign.justify,
+                          ),
+                        ),
+                        SizedBox(
+                          height: 300,
+                          child: ListView.builder(
+                            itemCount: _listaDeEpisodios.length,
+                            itemBuilder: (context, index){
+                              Map<String, dynamic> episodio = _listaDeEpisodios[index];
+                              //print("opa");
+                             // print(episodio.toString());
+                             // print(episodio['season']);
+                              // Verificar se o episódio pertence à temporada selecionada
+                              if (episodio['season'] == _temporadaSelecionada) {
+                                return ListTile(
+                                  title: Text(episodio['episode']),
+                                  subtitle: Text(episodio['url']),
+                                  // Adicionar mais informações do episódio conforme necessário
+                                );
+                              } else {
+                                return Container(); // Episódio não pertence à temporada selecionada
+                              }
+                            },
                           ),
                         )
                       ],
