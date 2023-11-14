@@ -19,8 +19,7 @@ class _LiveScreenState extends State<LiveScreen> {
   late String _url;
   bool _tocando = false;
 
-  late IJKPlayerController controller;
-  late VideoPlayerController videoPlayerController;
+  late VideoPlayerController _videoPlayerController;
   late ChewieController _chewieController;
 
 
@@ -33,18 +32,21 @@ class _LiveScreenState extends State<LiveScreen> {
 
   Future<void> _inicializarController () async {
 
-    await videoPlayerController.initialize();
-    ChewieController chewieController =  ChewieController(
-      videoPlayerController: videoPlayerController,
-      autoPlay: true,
-      looping: true,
-      fullScreenByDefault: true,
-      isLive: true
+    await _videoPlayerController.initialize();
+    ChewieController chewieController;
+    chewieController =  ChewieController(
+        videoPlayerController: _videoPlayerController,
+        autoPlay: true,
+        looping: true,
+        fullScreenByDefault: true,
+        isLive: true,
+        aspectRatio: MediaQuery.of(context).size.width/MediaQuery.of(context).size.height,
+        controlsSafeAreaMinimum: EdgeInsets.only(top: 5,bottom: 5)
     );
+     setState(() {
+       _chewieController =  chewieController;
+     });
 
-    setState(() {
-      _chewieController = chewieController;
-    });
 
   }
 
@@ -58,9 +60,8 @@ class _LiveScreenState extends State<LiveScreen> {
       DeviceOrientation.landscapeRight,
       DeviceOrientation.landscapeLeft,
     ]);
-    videoPlayerController.dispose();
+    _videoPlayerController.dispose();
     _chewieController.dispose();
-    controller.stop();
     super.dispose();
   }
 
@@ -80,18 +81,27 @@ class _LiveScreenState extends State<LiveScreen> {
   //  String url = "http://devimages.apple.com.edgekey.net/streaming/examples/bipbop_4x3/gear2/prog_index.m3u8";
   //  String url = "http://iptv.cineliso.com/live/cinelisotv/baximovi/67219.m3u8"; //funciona
     //String url = 'https://cineliso.tv/';
-  //  String url = "http://g8kf.co:8880/Davidk/1u9cr3yk/11127";
+   //  String url = "http://g8kf.co:8880/Davidk/1u9cr3yk/11127";
     setState(() {
       _url = url;
     });
 
-    controller = IJKPlayerController.network(_url);
-    videoPlayerController = VideoPlayerController.network(
+    _videoPlayerController = VideoPlayerController.network(
         _url);
 
     _tocando = true;
 
     _inicializarController();
+
+     _chewieController =  ChewieController(
+        videoPlayerController: _videoPlayerController,
+        autoPlay: true,
+        looping: true,
+        fullScreenByDefault: true,
+        isLive: true,
+        aspectRatio: 1920/1080,
+        controlsSafeAreaMinimum: EdgeInsets.only(top: 5,bottom: 5)
+    );
 
 
   }
@@ -101,67 +111,9 @@ class _LiveScreenState extends State<LiveScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       //appBar: AppBar(title: const Text("live broadcase")),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Text("testando"),
-            SizedBox(height: 20,),
-            // GestureDetector(
-            //   onTap: () async {
-            //     print("passei aqui");
-            //     if (await controller.isPlaying){
-            //       await controller.pause();
-            //     } else {
-            //       await controller.play();
-            //     }
-            //   },
-            //   onLongPress: (){
-            //     print("tenteiiii");
-            //   },
-            //   child: AspectRatio(
-            //     //  aspectRatio: 1920/1080,
-            //     aspectRatio: MediaQuery.of(context).size.width/MediaQuery.of(context).size.height,
-            //     child: VideoPlayerRtmpExtWidget(
-            //       controller: controller,
-            //       viewCreated: (IJKPlayerController _) async {
-            //         if(controller.isAndroid){
-            //           await controller.setPlayManager(PlayerFactory.exo2PlayerManager);
-            //         }
-            //
-            //         await controller.play();
-            //       },
-            //     ),
-            //   ),
-            // ),
-        ElevatedButton(
-          onPressed: () async {
-            print("tenteiiii");
-            if (await _tocando){
-              print("to tocando");
-             await  controller.pause();
-              setState(() {
-                _tocando = false;
-              });
-
-            } else {
-              print("to pausado");
-              await  controller.play();
-              setState(() {
-                _tocando = true;
-              });
-            }
-
-          },
-          child: Text('Click me'),
-        ),
-            Chewie(controller: _chewieController)
-          ],
-        ),
+      body: Chewie(
+        controller: _chewieController,
       ),
     );
-
-    // Scaffold(
-    //   body: WebViewWidget(controller: _controller),
-    // );
   }
 }
