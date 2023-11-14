@@ -26,8 +26,8 @@ class _PlayMovieState extends State<PlayMovie> {
   void dispose() {
     // Quando o State é descartado, volta para as orientações preferidas do sistema
     SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
+      //DeviceOrientation.portraitUp,
+      //DeviceOrientation.portraitDown,
       DeviceOrientation.landscapeRight,
       DeviceOrientation.landscapeLeft,
     ]);
@@ -57,13 +57,17 @@ class _PlayMovieState extends State<PlayMovie> {
           videoStyle: VideoStyle(
             playIcon : Icon(Icons.play_arrow, color: Colors.white,size: 50,),
             pauseIcon : Icon(Icons.pause, color: Colors.white,size: 50,),
-            //fullscreenIcon : Icon(Icons.fullscreen),
+           // showLiveDirectButton: true,
+            fullscreenIcon : Icon(Icons.fullscreen,size: 1,),
             forwardIcon : Icon(Icons.skip_next, color: Colors.white,),
             backwardIcon : Icon(Icons.skip_previous, color: Colors.white,),
           ),
           videoLoadingStyle: VideoLoadingStyle(loading : Center(child: Text("Loading video"))),
-          aspectRatio: 16/9,
+          aspectRatio: MediaQuery.of(context).size.width / MediaQuery.of(context).size.height,
           allowCacheFile: true,
+          onFullScreen: (value){
+           if (value == false) Navigator.of(context).pop();
+          },
 
         ),
       ),

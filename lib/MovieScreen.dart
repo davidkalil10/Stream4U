@@ -1,7 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:rive/rive.dart';
+import 'package:rive/rive.dart' as rive;
 import 'package:stream4u/PlayMovie.dart';
 import 'package:stream4u/components/play_btn.dart';
 import 'package:stream4u/components/star_calculator.dart';
@@ -19,7 +19,7 @@ class MovieScreen extends StatefulWidget {
 }
 
 class _MovieScreenState extends State<MovieScreen> {
-  late RiveAnimationController _btnAnimationController;
+  late rive.RiveAnimationController _btnAnimationController;
   late List<Map<String, dynamic>> _listaDeEpisodios;
   String _temporadaSelecionada = 'S01'; // Temporada padrão
   int intTemporadaSelecionada = 1;
@@ -108,7 +108,7 @@ class _MovieScreenState extends State<MovieScreen> {
     // TODO: implement initState
     super.initState();
     _setLandscapeOrientation();
-    _btnAnimationController = OneShotAnimation("active", autoplay: false);
+    _btnAnimationController = rive.OneShotAnimation("active", autoplay: false);
     _listaDeEpisodios = extractUrls(widget.filme.url);
     _qntTemporadas = _obterQntTemporadas (_listaDeEpisodios);
     print("vamos ver: " +_qntTemporadas.toString());
@@ -233,7 +233,8 @@ class _MovieScreenState extends State<MovieScreen> {
                                                 'Data de Lançamento:',
                                                 style: TextStyle(fontSize: 17, color: Colors.white, fontWeight: FontWeight.bold), ),
                                             ),
-                                            Padding(
+                                            if ( _isMovie == true)
+                                              Padding(
                                               padding:  EdgeInsets.all(7),
                                               child: Text(
                                                 'Duração:',
@@ -250,7 +251,7 @@ class _MovieScreenState extends State<MovieScreen> {
                                               child: Text(
                                                 'Atores:',
                                                 style: TextStyle(fontSize: 17, color: Colors.white, fontWeight: FontWeight.bold), ),
-                                            )
+                                            ),
                                           ],
                                         ),
                                       ),
@@ -272,6 +273,7 @@ class _MovieScreenState extends State<MovieScreen> {
                                                 widget.filme.date,
                                                 style: TextStyle(fontSize: 17, color: Colors.white), ),
                                             ),
+                                            if ( _isMovie == true)
                                             Padding(
                                               padding:  EdgeInsets.all(7),
                                               child: Text(
@@ -298,57 +300,96 @@ class _MovieScreenState extends State<MovieScreen> {
                                     ],
                                   ),
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       //SizedBox(width: 150,),
-                                      PlayBtn(
-                                        btnAnimationController: _btnAnimationController,
-                                        press: () {
-                                          _btnAnimationController.isActive = true;
-                                          Future.delayed(Duration(milliseconds: 800), () {
-                                          }
-                                          );
-                                          // print("botao clicado");
-                                          if ( _isMovie)
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) => PlayMovie(url: _movieURL,),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                      DropdownButton(
-                                        value: intTemporadaSelecionada,
-                                        items: List.generate(
-                                          // Substitua o número 3 pelo número total de temporadas disponíveis
-                                          _qntTemporadas,
-                                              (index) => DropdownMenuItem(
-                                            value: index + 1, // Adiciona 1 para começar de 1 em vez de 0
-                                            child: Text('Temporada S${index + 1}'),
+                                      Container(
+                                        //margin: EdgeInsets.all(0),
+                                        //padding: EdgeInsets.symmetric(horizontal: 16),
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(30),
+                                          gradient: LinearGradient(
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                            colors: [Colors.red, Colors.orange],
                                           ),
                                         ),
-                                        onChanged: (value) {
-                                         // Navigator.pop(context); // Fecha o menu
-                                          List<Map<String, dynamic>> episodiosTemporadaSelecionada = [];
-                                          String temporadaSelecionada = value!<10?"S0"+value.toString():"S"+value.toString();
+                                        child: ElevatedButton.icon(
+                                          clipBehavior: Clip.none,
+                                          style: ElevatedButton.styleFrom(
+                                            foregroundColor: Colors.transparent,
+                                            shadowColor: Colors.transparent,
+                                            disabledBackgroundColor: Colors.transparent,
+                                            disabledForegroundColor: Colors.transparent,
+                                            backgroundColor: Colors.transparent, // Define a cor de fundo como transparente
+                                          ),
+                                          onPressed: () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) => PlayMovie(url: _movieURL),
+                                                ),
+                                              );
+                                          },
+                                          icon: Icon(Icons.play_arrow, color: Colors.white),
+                                          label: Text( _isMovie == true ? 'Play': 'Play '+_temporadaSelecionada+" E01",
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      if ( _isMovie == false)
+                                      Padding(
+                                        padding: EdgeInsets.only(left: 20),
+                                        child: Container(
+                                          padding: EdgeInsets.symmetric(horizontal: 16),
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(50),
+                                            gradient: LinearGradient(
+                                                begin: Alignment.topLeft,
+                                                end: Alignment.bottomRight,
+                                                colors: [Colors.grey.shade300, Colors.grey.shade400]
+                                            ),
+                                          ),
+                                          child: DropdownButton(
+                                            value: intTemporadaSelecionada,
+                                            iconEnabledColor: Colors.white,
+                                            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 16),
+                                            items: List.generate(
+                                              // Substitua o número 3 pelo número total de temporadas disponíveis
+                                              _qntTemporadas,
+                                                  (index) => DropdownMenuItem(
+                                                value: index + 1, // Adiciona 1 para começar de 1 em vez de 0
+                                                child: Text('Temporada S${index + 1}'),
+                                              ),
+                                            ),
+                                            onChanged: (value) {
+                                              // Navigator.pop(context); // Fecha o menu
+                                              List<Map<String, dynamic>> episodiosTemporadaSelecionada = [];
+                                              String temporadaSelecionada = value!<10?"S0"+value.toString():"S"+value.toString();
 
-                                          for (Map<String, dynamic> episodio in _listaDeEpisodios) {
-                                            if (episodio['season'] == temporadaSelecionada.toString()) {
-                                              episodiosTemporadaSelecionada.add(episodio);
-                                              print(episodio);
-                                            }
-                                          }
-                                          setState(() {
-                                            _temporadaSelecionada = temporadaSelecionada;
-                                            print(_temporadaSelecionada);
-                                            intTemporadaSelecionada = value!;
-                                            _episodiosTemporadaSelecionada = episodiosTemporadaSelecionada;
-                                          });
-                                        },
-                                      )
-                                    //  SizedBox(width: 500,),
+                                              for (Map<String, dynamic> episodio in _listaDeEpisodios) {
+                                                if (episodio['season'] == temporadaSelecionada.toString()) {
+                                                  episodiosTemporadaSelecionada.add(episodio);
+                                                  print(episodio);
+                                                }
+                                              }
+                                              setState(() {
+                                                _temporadaSelecionada = temporadaSelecionada;
+                                                print(_temporadaSelecionada);
+                                                intTemporadaSelecionada = value!;
+                                                _episodiosTemporadaSelecionada = episodiosTemporadaSelecionada;
+                                              });
+                                            },
+                                          ),
+                                        ),
+                                      ),
+                                      SizedBox(width: 200,),
+                                      SizedBox(width: 1),
                                     ],
                                   )
 
@@ -361,12 +402,14 @@ class _MovieScreenState extends State<MovieScreen> {
                           padding: EdgeInsets.all(20),
                           child: Text(
                             widget.filme.subtitle,
-                            style: TextStyle(color: Colors.white, fontSize: 16),
+                            style: TextStyle(color: Colors.white, fontSize: 12),
                             textAlign: TextAlign.justify,
                           ),
                         ),
+                        if ( _isMovie == false)
                         SizedBox(
-                          height: 300,
+                          height: 200,
+                          width: MediaQuery.of(context).size.width*0.95,
                           child: ListView.builder(
                             itemCount: _listaDeEpisodios.length,
                             itemBuilder: (context, index){
@@ -375,7 +418,14 @@ class _MovieScreenState extends State<MovieScreen> {
                              // print(episodio.toString());
                              // print(episodio['season']);
                               // Verificar se o episódio pertence à temporada selecionada
+                              if (episodio['season'] == _temporadaSelecionada && episodio['episode'] == " E01"){
+                                print("passei aqui");
+                                _movieURL = episodio['url'];
+                              }
                               if (episodio['season'] == _temporadaSelecionada) {
+                                if(episodio['episode'] == "E01"){
+                                  print("passei aqui");
+                                }
                                 return GestureDetector(
                                   onTap: (){
                                     Navigator.push(
@@ -385,10 +435,24 @@ class _MovieScreenState extends State<MovieScreen> {
                                       ),
                                     );
                                   },
-                                  child: ListTile(
-                                    title: Text(episodio['episode']),
-                                    subtitle: Text(episodio['url']),
-                                    // Adicionar mais informações do episódio conforme necessário
+                                  child: Card(
+                                    margin: EdgeInsets.all(8),
+                                    child: ListTile(
+                                      selectedColor: Colors.orange,
+                                      leading: Container(
+                                        width: 90,
+                                        height: 80,
+                                        decoration: BoxDecoration(
+                                          image: DecorationImage(
+                                              image: NetworkImage(widget.filme.pictureURL),
+                                            fit: BoxFit.cover
+                                          )
+                                        ),
+                                      ),
+                                      title: Text(_temporadaSelecionada + episodio['episode']),
+                                      //subtitle: Text(episodio['url']),
+                                      // Adicionar mais informações do episódio conforme necessário
+                                    ),
                                   ),
                                 );
                               } else {

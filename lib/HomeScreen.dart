@@ -371,7 +371,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return listaConteudos;
   }
 
-
   void _waitingAPI() async{
     showDialog(
       context: context,
