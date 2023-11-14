@@ -25,6 +25,8 @@ class _MovieScreenState extends State<MovieScreen> {
   int intTemporadaSelecionada = 1;
   int _qntTemporadas =0;
   List<Map<String, dynamic>> _episodiosTemporadaSelecionada = [];
+  bool _isMovie = false;
+  String _movieURL = "";
 
   List<Map<String, dynamic>> extractUrls(String input) {
     List<Map<String, dynamic>> contents = [];
@@ -59,6 +61,11 @@ class _MovieScreenState extends State<MovieScreen> {
         } else if (typeAndInfo == 'HD') {
           // Filme
           contents.add({'type': 'Filme', 'season': 'Filme', 'episode': 'Filme', 'url': data});
+          setState(() {
+            _isMovie = true;
+            _movieURL = contents.first["url"];
+            print(_movieURL);
+          });
         }
       }
     }
@@ -302,13 +309,14 @@ class _MovieScreenState extends State<MovieScreen> {
                                           Future.delayed(Duration(milliseconds: 800), () {
                                           }
                                           );
-                                          print("botao clicado");
-                                          // Navigator.push(
-                                          //   context,
-                                          //   MaterialPageRoute(
-                                          //     builder: (context) => PlayMovie(url: extrairURL(widget.filme.url),),
-                                          //   ),
-                                          // );
+                                          // print("botao clicado");
+                                          if ( _isMovie)
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => PlayMovie(url: _movieURL,),
+                                            ),
+                                          );
                                         },
                                       ),
                                       DropdownButton(
@@ -368,10 +376,20 @@ class _MovieScreenState extends State<MovieScreen> {
                              // print(episodio['season']);
                               // Verificar se o episódio pertence à temporada selecionada
                               if (episodio['season'] == _temporadaSelecionada) {
-                                return ListTile(
-                                  title: Text(episodio['episode']),
-                                  subtitle: Text(episodio['url']),
-                                  // Adicionar mais informações do episódio conforme necessário
+                                return GestureDetector(
+                                  onTap: (){
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => PlayMovie(url: episodio['url'],),
+                                      ),
+                                    );
+                                  },
+                                  child: ListTile(
+                                    title: Text(episodio['episode']),
+                                    subtitle: Text(episodio['url']),
+                                    // Adicionar mais informações do episódio conforme necessário
+                                  ),
                                 );
                               } else {
                                 return Container(); // Episódio não pertence à temporada selecionada

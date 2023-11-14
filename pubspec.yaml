@@ -48,6 +48,9 @@ dependencies:
   intl: ^0.18.1
   shared_preferences: ^2.2.2
   lecle_yoyo_player: ^0.0.6
+  video_player_rtmp_ext: ^0.1.0
+  chewie: ^1.5.0
+  video_player: ^2.8.1
 
 
 dev_dependencies:

@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:stream4u/LiveScreen.dart';
 import 'package:stream4u/VodContent.dart';
 import 'package:stream4u/components/customCard.dart';
 import 'package:stream4u/constants.dart';
@@ -507,7 +508,16 @@ class _HomeScreenState extends State<HomeScreen> {
             mainAxisSpacing: 10,
             padding: EdgeInsets.all(20),
             children: [
-              CustomCard( icon: Icons.live_tv, lable: "Live TV", coresGradiente: [Colors.green, Colors.blue],callback: (){}),
+              CustomCard( icon: Icons.live_tv, lable: "Live TV", coresGradiente: [Colors.green, Colors.blue],callback: (){
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => LiveScreen(),
+                  ),
+                );
+
+              }),
               CustomCard( icon: Icons.movie, lable: "Filmes", coresGradiente: [Colors.redAccent, Colors.orange],callback: (){
 
                 if (_contentList.isNotEmpty && _movieCategories.isNotEmpty) {
