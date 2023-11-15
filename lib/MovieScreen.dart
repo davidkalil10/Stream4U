@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:rive/rive.dart' as rive;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stream4u/PlayMovie.dart';
 import 'package:stream4u/components/play_btn.dart';
 import 'package:stream4u/components/star_calculator.dart';
@@ -27,6 +28,7 @@ class _MovieScreenState extends State<MovieScreen> {
   List<Map<String, dynamic>> _episodiosTemporadaSelecionada = [];
   bool _isMovie = false;
   String _movieURL = "";
+  List<String> _favoriteIds = [];
 
   List<Map<String, dynamic>> extractUrls(String input) {
     List<Map<String, dynamic>> contents = [];
@@ -89,6 +91,44 @@ class _MovieScreenState extends State<MovieScreen> {
     ]);
   }
 
+  Future<void> _saveFavorite(String movieId, bool isFavorite) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Recupere a lista de favoritos existente
+    List<String> favorites = prefs.getStringList('favorites') ?? [];
+
+    // Adicione ou remova o ID do filme dependendo do status de favorito
+    if (isFavorite) {
+      favorites.add(movieId);
+    } else {
+      favorites.remove(movieId);
+    }
+
+    // Salve a lista atualizada
+    prefs.setStringList('favorites', favorites);
+  }
+
+  Future<List<String>> _getFavorites() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    setState(() {
+      _favoriteIds = prefs.getStringList('favorites') ?? [];
+    });
+    return
+      prefs.getStringList('favorites') ?? [];
+  }
+
+  Future<void> _favoriteCheck() async {
+    List<String> favoriteIds = await _getFavorites();
+    print(favoriteIds);
+    print("oque deu:");
+    if(favoriteIds.contains(widget.filme.id.toString())){
+      setState(() {
+        widget.filme.isFavorite = true;
+      });
+    }
+  }
+
   @override
   void dispose() {
     // Quando o State é descartado, volta para as orientações preferidas do sistema
@@ -114,6 +154,8 @@ class _MovieScreenState extends State<MovieScreen> {
     print("vamos ver: " +_qntTemporadas.toString());
     print("aqui oh");
     print(_listaDeEpisodios);
+    _getFavorites();
+    _favoriteCheck();
 
   }
 
@@ -467,10 +509,16 @@ class _MovieScreenState extends State<MovieScreen> {
                       top: 10, // Ajuste conforme necessário para a posição vertical
                       right: 20, // Ajuste conforme necessário para a posição horizontal
                       child: IconButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          setState(() {
+                            widget.filme.isFavorite = !widget.filme.isFavorite;
+                          });
+                          // Salve ou remova o ID do filme nos favoritos (use SharedPreferences)
+                          _saveFavorite(widget.filme.id.toString(), widget.filme.isFavorite);
+                        },
                         icon: Icon(
-                          Icons.favorite,
-                          color: Colors.white,
+                          widget.filme.isFavorite ? Icons.favorite : Icons.favorite_border,
+                          color: Colors.red,
                           size: 35,
                         ),
                       )

@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stream4u/MovieScreen.dart';
 import 'package:stream4u/components/movie_card.dart';
 import 'package:stream4u/constants.dart';
@@ -33,6 +34,9 @@ class _VodContentState extends State<VodContent> {
   late List<Movie> _filteredMoviesBackup;
   bool _isSearchOpened = false;
   String _filteredCategoryName="Todos os Conteúdos";
+  bool _ordemCrescente = true; // Flag para controlar a ordem (crescente ou decrescente)
+  bool _escolherOrdem = false; // Flag para controlar se o usuário deve escolher a ordem
+  List<String> _favoriteIds = [];
 
   String getCategoryNameById(int? categoryId, List<Map<String, dynamic>> categories) {
     for (var category in categories) {
@@ -43,7 +47,20 @@ class _VodContentState extends State<VodContent> {
     return 'Categoria não encontrada'; // ou null, dependendo do caso
   }
 
+  Future<List<String>> _getFavorites() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    setState(() {
+      _favoriteIds = prefs.getStringList('favorites') ?? [];
+    });
+    return
+      prefs.getStringList('favorites') ?? [];
+  }
+
   void consultaPorCategoriaBaseLocal(String idConteudo) async{
+
+    print("meu id é:");
+    print(idConteudo);
 
     // Faça algo com os dados aqui
 
@@ -55,8 +72,8 @@ class _VodContentState extends State<VodContent> {
     String nomeCategoria = getCategoryNameById((int.tryParse(idConteudo)),_filteredCategories);
 
 
-    if (idConteudo != "-1"){
-
+    if ((idConteudo != "-1") && (idConteudo != "-2") ){
+        print("ok");
       // Itera sobre todas os dados para obter o conteúdo filtrado
       List<dynamic> filteredContent = allContent.where((item) {
         return item['type_id'].toString() == idConteudo;
@@ -85,8 +102,8 @@ class _VodContentState extends State<VodContent> {
         _filteredCategoryName = nomeCategoria;
       });
 
-    }else{
-
+    }else if (idConteudo == "-1"){
+      print("passei no total");
       //Clicado em todas os conteúdos
       setState(() {
         _contentListFiltered = widget.contentList;
@@ -94,6 +111,32 @@ class _VodContentState extends State<VodContent> {
         _filteredMovies = _listaFilmes;
         _filteredMoviesBackup = _listaFilmes;
         _filteredCategoryName = "Todos os Conteúdos";
+      });
+
+    } else{
+      // Clicado nos favoritos
+
+      // Recupere a lista de favoritos
+      List<String> favoriteIds = await _getFavorites();
+      print(favoriteIds);
+
+      // Filtre a lista de filmes exibindo apenas os favoritos
+      // Iterando pelos elementos da lista e imprimindo
+      List<Movie> listaFilmes =[];
+      for (var content in allContent) {
+        //    print(content);
+        //Preencher o Filme com o resultado da busca
+        listaFilmes.add(Movie.fromJson(content)) ;
+      }
+
+      List<Movie> favoriteMovies = listaFilmes.where((movie) => favoriteIds.contains(movie.id.toString())).toList();
+
+      setState(() {
+        _contentListFiltered = widget.contentList;
+        _listaFilmes = favoriteMovies;
+        _filteredMovies = _listaFilmes;
+        _filteredMoviesBackup = _listaFilmes;
+        _filteredCategoryName = "Favoritos";
       });
 
     }
@@ -155,6 +198,86 @@ class _VodContentState extends State<VodContent> {
     });
   }
 
+  void _sortMovies(String criterio) {
+    List<Movie> filteredMovies = [];
+
+    if (criterio== "title"){
+      filteredMovies = _filteredMovies..sort((a, b) => a.title.compareTo(b.title));
+    } else if (criterio== "ano"){
+      filteredMovies = _filteredMovies..sort((a, b) => b.year.compareTo(a.year));
+    }else if (criterio== "avaliacoes"){
+      filteredMovies = _filteredMovies..sort((a, b) => b.rating.compareTo(a.rating));
+    }
+
+    if (!_ordemCrescente){
+      filteredMovies = filteredMovies.reversed.toList();
+    }
+
+    setState(() {
+      _filteredMoviesBackup = filteredMovies;
+    });
+  }
+
+  void _mostrarDialogClassificacao() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Escolha a Classificação'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text('Ordem:'),
+                  SizedBox(width: 10),
+                  InkWell(
+                    onTap: () {
+                      _alterarOrdem(); // Ordem crescente (A>Z)
+                    },
+                    child: _ordemCrescente
+                        ? Icon(Icons.arrow_upward, color: Colors.blue)
+                        : Icon(Icons.arrow_downward, color: Colors.blue),
+                  ),
+                ],
+              ),
+              SizedBox(height: 10,),
+              _opcaoClassificacao('Ordem Alfabética', 'title'),
+              SizedBox(height: 10,),
+              _opcaoClassificacao('Ano de Lançamento', 'ano'),
+              SizedBox(height: 10,),
+              _opcaoClassificacao('Avaliações', 'avaliacoes'),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _opcaoClassificacao(String label, String criterio) {
+    return
+      InkWell(
+        onTap: () {
+          _escolherOrdem = true; // Permitir escolher a ordem
+          _sortMovies(criterio);
+          Navigator.pop(context);
+        },
+        child: Text(label),
+      );
+  }
+
+  void _alterarOrdem() {
+    // Função para alterar a ordem visualmente na dialog
+    print("ordem atual:" + _ordemCrescente.toString());
+    setState(() {
+      _ordemCrescente = !_ordemCrescente;
+    });
+    print("ordem final:" + _ordemCrescente.toString());
+    Navigator.pop(context);
+    _mostrarDialogClassificacao();
+  }
+
   void _setLandscapeOrientation(){
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.landscapeRight,
@@ -187,6 +310,7 @@ class _VodContentState extends State<VodContent> {
     _filteredMoviesBackup = widget.listaFilmes;
     _filteredCategories = widget.contentCategories;
     //_listaFilmes = converterParaListaFilmes(widget.contentList);
+    _getFavorites();
 
     setState(() {
       _contentListFiltered = widget.contentList;
@@ -300,6 +424,10 @@ class _VodContentState extends State<VodContent> {
                 if (value == 'toggle_captions') {
                   isSubtitleOn = !isSubtitleOn;
                 }
+                if (value == 'ordering') {
+                  //chmar alert de classificação
+                  _mostrarDialogClassificacao();
+                }
                 // Outras ações do menu popup
               });
             },
@@ -308,6 +436,10 @@ class _VodContentState extends State<VodContent> {
                 value: 'toggle_captions',
                 child: Text(isSubtitleOn ? 'Ocultar Legendas' : 'Exibir Legendas'),
               ),
+              PopupMenuItem<String>(
+                value: 'ordering',
+                child: Text('Classificar'),
+              )
               // Outros itens do menu popup
             ],
             icon: Icon(Icons.more_vert),

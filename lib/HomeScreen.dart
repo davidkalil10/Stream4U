@@ -1,14 +1,15 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:stream4u/LiveScreen.dart';
+import 'package:stream4u/LiveContent.dart';
 import 'package:stream4u/VodContent.dart';
 import 'package:stream4u/components/customCard.dart';
 import 'package:stream4u/constants.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:stream4u/models/PlaylistItem.dart';
+import 'package:stream4u/models/channel.dart';
 import 'package:stream4u/models/movie.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -22,6 +23,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<dynamic> _contentList = [];
   String _formattedDate = "";
+  String _respomse = "";
+  late List<PlaylistItem> _playlist;
   List<Map<String, dynamic>> _movieCategories = [];
   List<Map<String, dynamic>> _seriesCategories = [];
   List<Map<String, dynamic>> _animationCategories = [];
@@ -34,6 +37,8 @@ class _HomeScreenState extends State<HomeScreen> {
     var apiBASE = "https://api.cinelisoapi.com/api.php/provide/vod/"; //tudo
     var apiUrl = apiBASE + "?ac=videolist"; //tudo
     var response = await http.get(Uri.parse(apiUrl));
+
+    _getTVData();
 
     if (response.statusCode == 200) {
       // Se a solicitação for bem-sucedida, analise os dados JSON
@@ -178,33 +183,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _formattedDate = formattedDate;
       });
 
-      _saveData(contentList, formattedDate, _movieCategories, _seriesCategories, _animationCategories);
-
-      // showDialog(
-      //   context: context,
-      //   builder: (BuildContext context) {
-      //     return AlertDialog(
-      //       title: Text('Sucesso!'),
-      //       content: Column(
-      //         mainAxisSize: MainAxisSize.min,
-      //         crossAxisAlignment: CrossAxisAlignment.start,
-      //         children: [
-      //           Text('Os dados foram atualizados com sucesso.'),
-      //           SizedBox(height: 8,),
-      //           Text('Última atualização: $formattedDate'),
-      //         ],
-      //       ),
-      //       actions: <Widget>[
-      //         TextButton(
-      //           child: Text('OK'),
-      //           onPressed: () {
-      //             Navigator.of(context).pop(); // Fecha o AlertDialog
-      //           },
-      //         ),
-      //       ],
-      //     );
-      //   },
-      // );
+      _saveData(contentList, formattedDate, _movieCategories, _seriesCategories, _animationCategories, _playlist);
 
 
     } else {
@@ -289,10 +268,16 @@ class _HomeScreenState extends State<HomeScreen> {
         'type_name': 'Todos os conteúdos'
       });
     }
+    if (!categories.any((category) => category['type_name'] == 'FAVORITOS')) {
+      categories.insert(0, {
+        'type_id': -2, // Um ID que não será conflitante com outros IDs reais
+        'type_name': 'Favoritos'
+      });
+    }
     return categories;
   }
 
-  void _saveData(List<dynamic> contentList, String formattedDate, List<Map<String, dynamic>> movieCategories, List<Map<String, dynamic>> seriesCategories, List<Map<String, dynamic>> animationCategories) async {
+  void _saveData(List<dynamic> contentList, String formattedDate, List<Map<String, dynamic>> movieCategories, List<Map<String, dynamic>> seriesCategories, List<Map<String, dynamic>> animationCategories, List<PlaylistItem> playlistTV) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String contentListJson = json.encode(contentList);
     prefs.setString('contentList', contentListJson);
@@ -307,6 +292,12 @@ class _HomeScreenState extends State<HomeScreen> {
     String animationCategoriesJson = json.encode(animationCategories);
     prefs.setString('animationCategories', animationCategoriesJson);
 
+    // Converte a lista de PlaylistItem para uma lista de Map
+    List<Map<String, dynamic>> playlistData = playlistTV.map((item) => item.toMap()).toList();
+    // Converte a lista de Map para uma lista de String
+    List<String> playlistTVJson = playlistData.map((map) => json.encode(map)).toList();
+
+    prefs.setStringList('playlistTV', playlistTVJson);
   }
 
 
@@ -317,12 +308,14 @@ class _HomeScreenState extends State<HomeScreen> {
     String? movieCategoriesJson = prefs.getString('movieCategories');
     String? seriesCategoriesJson = prefs.getString('seriesCategories');
     String? animationCategoriesJson = prefs.getString('animationCategories');
+    List<String>? playlistTVJson = prefs.getStringList('playlistTV');
 
     if (contentListJson != null &&
         storedFormattedDate != null &&
         movieCategoriesJson != null &&
         seriesCategoriesJson != null &&
-        animationCategoriesJson != null) {
+        animationCategoriesJson != null &&
+        playlistTVJson != null) {
       List<dynamic> contentList = json.decode(contentListJson);
       List<Map<String, dynamic>> movieCategories =
       List<Map<String, dynamic>>.from(json.decode(movieCategoriesJson));
@@ -330,6 +323,8 @@ class _HomeScreenState extends State<HomeScreen> {
       List<Map<String, dynamic>>.from(json.decode(seriesCategoriesJson));
       List<Map<String, dynamic>> animationCategories =
       List<Map<String, dynamic>>.from(json.decode(animationCategoriesJson));
+      final playlistTV = playlistTVJson.map((item) => PlaylistItem.fromMap(item)).toList();
+
 
       print("Dados carregados da memória com sucesso");
 
@@ -339,6 +334,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _movieCategories = movieCategories;
         _seriesCategories = seriesCategories;
         _animationCategories = animationCategories;
+        _playlist = playlistTV;
        //_allowContent = true;
       });
     } else {
@@ -371,7 +367,22 @@ class _HomeScreenState extends State<HomeScreen> {
     return listaConteudos;
   }
 
+  List<Channel> converterParaListaCanais(List<PlaylistItem> playlist){
+
+    return playlist.map((item) {
+      return Channel(
+        title: item.title,
+        category: item.category,
+        pictureURL: item.logoUrl, // Use 'logoUrl' como URL da imagem
+        url: item.url,
+      );
+    }).toList();
+  }
+
   void _waitingAPI() async{
+    DateTime dataInicio = DateTime.now();
+    int minutos = 0;
+    int segundos = 0;
     showDialog(
       context: context,
       barrierDismissible: false, // Impede o fechamento do diálogo ao tocar fora dele
@@ -397,6 +408,15 @@ class _HomeScreenState extends State<HomeScreen> {
       bool api = await _fetchAPI();
       try {
         if (api = true){
+          DateTime dataFim = DateTime.now();
+          // Calcule a diferença
+
+          Duration diferenca = dataFim.difference(dataInicio);
+
+          // Obtenha os minutos e segundos
+          minutos = diferenca.inMinutes;
+          segundos = diferenca.inSeconds % 60;
+
            Navigator.of(context).pop();
 
 
@@ -406,7 +426,8 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     } catch (e) {
       print('Erro ao acessar a API: $e');
-    } finally {
+    } finally {;
+
       showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -417,6 +438,8 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Os dados foram atualizados com sucesso.'),
+                SizedBox(height: 8,),
+                Text('Levou $minutos minutos e $segundos segundos'),
                 SizedBox(height: 8,),
                 Text('Última atualização: $_formattedDate'),
               ],
@@ -435,12 +458,74 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // Função para converter uma string de data para DateTime
+  DateTime converterStringParaDateTime(String dataString) {
+    // Divida a string em partes (dia, mês, ano, hora, minuto)
+    List<String> partes = dataString.split(' ');
+
+    // Divida a parte da data em dia, mês e ano
+    List<String> dataPartes = partes[0].split('/');
+    int dia = int.parse(dataPartes[0]);
+    int mes = int.parse(dataPartes[1]);
+    int ano = int.parse(dataPartes[2]);
+
+    // Divida a parte da hora em hora e minuto
+    List<String> horaPartes = partes[1].split(':');
+    int hora = int.parse(horaPartes[0]);
+    int minuto = int.parse(horaPartes[1]);
+
+    // Crie o objeto DateTime
+    DateTime data = DateTime(ano, mes, dia, hora, minuto);
+
+    return data;
+  }
+
   void _setLandscapeOrientation(){
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.landscapeRight,
       DeviceOrientation.landscapeLeft,
     ]);
   }
+
+  Future<String> baixarArquivoM3U(String url) async {
+    final response = await http.get(Uri.parse(url));
+
+    if (response.statusCode == 200) {
+      // O arquivo .m3u está no corpo da resposta
+      // List<PlaylistItem> playlist = parseM3U(response.body);
+      // setState(() {
+      //   _playlist = playlist;
+      // });
+      // print(_playlist);
+    //  print('Conteúdo Original:\n${response.body}\n');
+
+      return response.body;
+    } else {
+      // Se a solicitação falhar, você pode lidar com isso aqui
+      throw Exception('Falha ao baixar o arquivo .m3u');
+    }
+  }
+
+  _getTVData() async {
+    String  url = "http://iptv.cineliso.com:80/get.php?username=cinelisotv&password=baximovi&type=m3u_plus&output=hls";
+    String getData = await baixarArquivoM3U(url);
+    List<PlaylistItem> getLista = [];
+    getLista = await parseM3U(getData);
+    print("total items " +getLista.length.toString());
+    for (PlaylistItem item in getLista) {
+      print('Title: ${item.title}');
+      print('Logo URL: ${item.logoUrl}');
+      print('URL: ${item.url}');
+      print('Category: ${item.category}');
+      print('---');  // Apenas para separar os itens
+    }
+    setState(() {
+      _playlist = getLista;
+    });
+  }
+
+
+
 
   @override
   void dispose() {
@@ -460,6 +545,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _setLandscapeOrientation();
     loadData();
+
   }
 
 
@@ -492,7 +578,21 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     IconButton(
                       icon: Icon(Icons.person, color: Colors.white,),
-                      onPressed: (){},
+                      onPressed: () async{
+                     //   String  url = "http://iptv.cineliso.com:80/get.php?username=cinelisotv&password=baximovi&type=m3u_plus&output=hls";
+                       // String getData = await baixarArquivoM3U(url);
+                        //List<PlaylistItem> getLista = [];
+                        //getLista = await parseM3U(getData);
+                        print("total items " +_playlist.length.toString());
+                        // for (PlaylistItem item in _playlist) {
+                        //   print('Title: ${item.title}');
+                        //   print('Logo URL: ${item.logoUrl}');
+                        //   print('URL: ${item.url}');
+                        //   print('Category: ${item.category}');
+                        //   print('---');  // Apenas para separar os itens
+                        // }
+
+                      },
                     ),
                   ],
                 )
@@ -512,7 +612,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => LiveScreen(),
+                    builder: (context) => LiveContent(
+                      playlist: _playlist,
+                      listaCanais: converterParaListaCanais(_playlist)
+                    ),
                   ),
                 );
 

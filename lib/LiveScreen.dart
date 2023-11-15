@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:stream4u/models/channel.dart';
 import 'package:video_player/video_player.dart';
 import 'package:video_player_rtmp_ext/models/android_play_manager.dart';
 import 'package:video_player_rtmp_ext/widget/video_player_rtmp_ext.dart';
@@ -8,7 +9,8 @@ import 'package:video_player_rtmp_ext/video_player_rtmp_ext.dart';
 import 'package:chewie/chewie.dart';
 
 class LiveScreen extends StatefulWidget {
-  const LiveScreen({Key? key}) : super(key: key);
+  final String channelURL;
+  const LiveScreen({Key? key, required this.channelURL}) : super(key: key);
 
   @override
   State<LiveScreen> createState() => _LiveScreenState();
@@ -17,7 +19,6 @@ class LiveScreen extends StatefulWidget {
 class _LiveScreenState extends State<LiveScreen> {
 
   late String _url;
-  bool _tocando = false;
 
   late VideoPlayerController _videoPlayerController;
   late ChewieController _chewieController;
@@ -82,14 +83,13 @@ class _LiveScreenState extends State<LiveScreen> {
   //  String url = "http://iptv.cineliso.com/live/cinelisotv/baximovi/67219.m3u8"; //funciona
     //String url = 'https://cineliso.tv/';
    //  String url = "http://g8kf.co:8880/Davidk/1u9cr3yk/11127";
-    setState(() {
-      _url = url;
-    });
+   //  setState(() {
+   //    _url = widget.channelURL;
+   //  });
 
     _videoPlayerController = VideoPlayerController.network(
-        _url);
+        widget.channelURL);
 
-    _tocando = true;
 
     _inicializarController();
 

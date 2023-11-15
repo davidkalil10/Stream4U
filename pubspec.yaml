@@ -51,6 +51,7 @@ dependencies:
   video_player_rtmp_ext: ^0.1.0
   chewie: ^1.5.0
   video_player: ^2.8.1
+  m3u_nullsafe: ^1.0.4
 
 
 dev_dependencies:

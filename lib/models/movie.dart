@@ -17,6 +17,7 @@ class Movie extends StatelessWidget {
   String rating; //vod_score
   String date; //vod_time
   String url; //vod_play_url
+  bool isFavorite;
 
   Movie({
     required this.id,
@@ -32,6 +33,7 @@ class Movie extends StatelessWidget {
     required this.rating,
     required this.date,
     required this.url,
+    this.isFavorite = false
   });
 
   factory Movie.fromJson(Map<String, dynamic> json) {
