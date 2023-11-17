@@ -65,7 +65,7 @@ Future<List<PlaylistItem>> parseM3U(String content) async {
           String newURL = await _checkImageURL(currentLogoUrl);
           currentLogoUrl = newURL;
         // Verifica se o tvg-id não é vazio
-        if (currentID!.isNotEmpty) {
+        if (currentCategory != "filmes" && currentCategory != "Series" ) {
           playlist.add(PlaylistItem(currentTitle ?? '', currentLogoUrl ?? '', '', currentCategory!));
         }
       }

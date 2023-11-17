@@ -338,12 +338,12 @@ class _LiveContentState extends State<LiveContent> {
                       print("Cliquei no: ${canal.title}");
                       print("Cliquei no: ${canal.url}");
                       print("Cliquei no: ${canal.pictureURL}");
-                      // Navigator.push(
-                      //   context,
-                      //   MaterialPageRoute(
-                      //     builder: (context) => LiveScreen(channelURL: canal.url,),
-                      //   ),
-                      // );
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => LiveScreen(channelURL: canal.url,),
+                        ),
+                      );
                     },
                     child: ChannelCard(
                       urlPic: canal.pictureURL,
