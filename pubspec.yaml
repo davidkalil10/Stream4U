@@ -47,16 +47,23 @@ dependencies:
   cached_network_image: ^3.3.0
   intl: ^0.18.1
   shared_preferences: ^2.2.2
+  shared_preferences_web: ^2.2.1
   lecle_yoyo_player: ^0.0.6
   video_player_rtmp_ext: ^0.1.0
   chewie: ^1.5.0
   video_player: ^2.8.1
   m3u_nullsafe: ^1.0.4
+  flutter_launcher_icons: ^0.13.1
 
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/app_icon.png"
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

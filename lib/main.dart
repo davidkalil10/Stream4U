@@ -40,9 +40,9 @@ class MyApp extends StatelessWidget {
           errorBorder: defaultInputBorder,
         ),
       ),
-      //home: const OnboardingScreen(),
+      home: const OnboardingScreen(),
       //home: const testeAPI(),
-      home: const HomeScreen(),
+     // home: const HomeScreen(),
      // home: const LiveScreen(),
       //home: const MovieScreen(),
     );

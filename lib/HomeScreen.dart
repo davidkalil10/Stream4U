@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:stream4u/LiveContent.dart';
@@ -11,9 +12,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stream4u/models/PlaylistItem.dart';
 import 'package:stream4u/models/channel.dart';
 import 'package:stream4u/models/movie.dart';
+import 'package:stream4u/onboding_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  final DateTime expirationDate;
+  const HomeScreen({Key? key, required this.expirationDate}) : super(key: key);
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -524,6 +527,22 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  Future<void> _signOut() async {
+
+      await FirebaseAuth.instance.signOut();
+      //Limpar tokens do login automatico
+
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString('authToken', "false");
+      await prefs.setString('user', "");
+      await prefs.setString('pass', "");
+
+      print('Usuário deslogado com sucesso.');
+      Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => OnboardingScreen()));
+
+
+  }
+
 
 
 
@@ -545,7 +564,6 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _setLandscapeOrientation();
     loadData();
-
   }
 
 
@@ -576,24 +594,24 @@ class _HomeScreenState extends State<HomeScreen> {
                         _waitingAPI();
                       },
                     ),
-                    IconButton(
-                      icon: Icon(Icons.person, color: Colors.white,),
-                      onPressed: () async{
-                     //   String  url = "http://iptv.cineliso.com:80/get.php?username=cinelisotv&password=baximovi&type=m3u_plus&output=hls";
-                       // String getData = await baixarArquivoM3U(url);
-                        //List<PlaylistItem> getLista = [];
-                        //getLista = await parseM3U(getData);
-                        print("total items " +_playlist.length.toString());
-                        // for (PlaylistItem item in _playlist) {
-                        //   print('Title: ${item.title}');
-                        //   print('Logo URL: ${item.logoUrl}');
-                        //   print('URL: ${item.url}');
-                        //   print('Category: ${item.category}');
-                        //   print('---');  // Apenas para separar os itens
-                        // }
+                    PopupMenuButton<String>(
+                      onSelected: (value) {
+                        setState(() {
+                          if (value == 'logout') {
+                            _signOut();
+                          }
 
+                        });
                       },
-                    ),
+                      itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                        PopupMenuItem<String>(
+                          value: 'logout',
+                          child: Text('Log Out'),
+                        )
+                        // Outros itens do menu popup
+                      ],
+                      icon: Icon(Icons.person, color: Colors.white,),
+                    )
                   ],
                 )
               ],
@@ -683,7 +701,7 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  "Expiração xx/xx/xx",
+                  "Expiração: "+widget.expirationDate.toLocal().day.toString()+"/"+widget.expirationDate.toLocal().month.toString()+"/"+widget.expirationDate.toLocal().year.toString(),
                   style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),

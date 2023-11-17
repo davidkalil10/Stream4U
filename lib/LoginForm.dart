@@ -4,28 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:stream4u/HomeScreen.dart';
 import 'package:stream4u/WebViewWidget.dart';
 
 class LoginForm extends StatefulWidget {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -49,9 +32,30 @@ class _LoginFormState extends State<LoginForm> {
   Future<void> checkCurrentUser() async {
     User? user = _auth.currentUser;
     if (user != null) {
-      await _auth.signOut(); // Desconectar o usuário atual.
+
+      //await _auth.signOut(); // Desconectar o usuário atual.
       // Tente fazer login novamente.
       signIn(); // Chama o método de login após o logout.
+    }
+  }
+
+  Future<void> storeAuthToken() async {
+    try {
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        bool token = true;
+        if (token != null) {
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+          await prefs.setString('authToken', token.toString());
+          await prefs.setString('user', user.email.toString());
+          await prefs.setString('pass', _passwordController.text);
+        } else {
+          // Tratar o caso em que o token é nulo
+          print("Erro: Token de autenticação é nulo.");
+        }
+      }
+    } catch (e) {
+      print("Erro ao armazenar o token de autenticação: $e");
     }
   }
 
@@ -105,9 +109,11 @@ class _LoginFormState extends State<LoginForm> {
           );
 
         } else{
+          storeAuthToken();
           // Redirecione para a tela principal se estiver válido.
          // Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => WebViewPage()));
-          Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => WebViewWidget()));
+         // Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => WebViewWidget()));
+          Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => HomeScreen(expirationDate: dt1,)));
         }
 
 
